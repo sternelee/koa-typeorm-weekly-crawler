@@ -1,2 +1,3 @@
-# wechat
-WeChat SDK for Node (微信SDK by koa, radis, mysql, typescript)
+# koa-typeorm-weekly-crawler
+
+使用koa + typeorm + puppeteer 爬取 javascriptweekly.com的数据
