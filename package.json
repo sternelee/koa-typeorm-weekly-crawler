@@ -1,0 +1,59 @@
+{
+  "name": "koa-typeorm-weekly-crawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "pm2 start",
+    "dev": "tsnd --inspect --watch .src ./src/app.ts",
+    "nodemon": "nodemon --watch src/**/*.ts --exec ts-node src/app.ts",
+    "serve": "pm2 start --name wechat --interpreter node_modules/.bin/ts-node src/app.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "crawler": "ts-node crawler"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sternelee/wechat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sternelee/wechat/issues"
+  },
+  "homepage": "https://github.com/sternelee/wechat#readme",
+  "dependencies": {
+    "@types/cheerio": "^0.22.13",
+    "@types/puppeteer": "^1.20.0",
+    "axios": "^0.19.0",
+    "busboy": "^0.3.1",
+    "cheerio": "^1.0.0-rc.3",
+    "co": "^4.6.0",
+    "crawler": "^1.2.1",
+    "koa": "^2.8.1",
+    "koa-bodyparser": "^4.2.1",
+    "koa-json": "^2.0.2",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^7.4.0",
+    "koa-static": "^5.0.0",
+    "puppeteer": "^1.20.0",
+    "query-string": "^6.8.3",
+    "reflect-metadata": "^0.1.13",
+    "request-promise": "^4.2.4",
+    "sqlite3": "^4.1.0",
+    "translation.js": "^0.7.9",
+    "typeorm": "^0.2.18",
+    "typescript": "^3.5.3"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.0.49",
+    "@types/koa-bodyparser": "^4.3.0",
+    "@types/koa-json": "^2.0.18",
+    "@types/koa-logger": "^3.1.1",
+    "@types/koa-router": "^7.0.42",
+    "@types/koa-static": "^4.0.1",
+    "@types/node": "^12.7.2",
+    "ts-node": "^8.3.0",
+    "ts-node-dev": "^1.0.0-pre.42"
+  }
+}
