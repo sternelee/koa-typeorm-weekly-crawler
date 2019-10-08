@@ -28,6 +28,9 @@ export class JavaScriptWeekly {
     link?: string
 
     @Column()
+    img?: string
+
+    @Column()
     pic?: string
 
     @Column()

@@ -1,21 +1,22 @@
 import "reflect-metadata"
 import { createConnection, getManager } from 'typeorm'
 import * as puppeteer from 'puppeteer'
+import co from 'co'
 import * as cheerio from 'cheerio'
-import { google } from 'translation.js'
+import { youdao, baidu, google } from 'translation.js'
 import { JavaScriptWeekly } from './src/entity/JavaScriptWeekly'
 
 const myConnection = createConnection()
 
 interface IPost {
-  pid?: string //内容ID
+  pid: string //内容ID
   page: string // 期号，当作页码
   date: string // 期号对应的日期
   title: string // 内容标题
   title_cn?: string // 中文的标题
-  category?: number // 内容分类，对应：Post, Jobs, 📘 Articles & Tutorials, 🔧 Code & Tools, Quick bytes, ⚡️ Quick Releases
+  category: number // 内容分类，对应：Post, Jobs, 📘 Articles & Tutorials, 🔧 Code & Tools, Quick bytes, ⚡️ Quick Releases
   link?: string // 内容外链
-  img?: string // 可能的大头图
+  img?: string // 可能的头图
   pic?: string // 可能的内容小配图
   summary?: string // 简介
   summary_cn?: string // 中文简介
@@ -24,6 +25,7 @@ interface IPost {
 let category = 0 // 类型id
 let theNext = 457
 let Posts: IPost[] = []
+let bigImg = '' //缓存头图
 
 // const URI = 'https://javascriptweekly.com/issues/latest';
 const URI = 'https://javascriptweekly.com/issues/'
@@ -48,10 +50,10 @@ async function saveData () {
   const ArticleRepository = getManager().getRepository(JavaScriptWeekly)
   Posts.forEach(v => {
     const article = new JavaScriptWeekly()
-    article.pid = v.pid || ''
+    article.pid = v.pid
     article.page = v.page
     article.date = v.date
-    article.category = v.category || 0
+    article.category = v.category
     article.title = v.title || ''
     article.title_cn = v.title_cn || ''
     article.link = v.link || ''
@@ -89,7 +91,7 @@ const crawJob = async function () {
     waitUntil: 'networkidle2',
     timeout: 30000
   })
-  // await page.screenshot({path: `${theNext}.png`, fullPage: true})
+  await page.screenshot({path: `${theNext}.png`, fullPage: true})
   const content = await page.content()
   // const body = await page.$('body')
   // console.log(content)
@@ -104,26 +106,13 @@ const crawJob = async function () {
   for (const table of Array.from(tables)) {
     const cs = table.attribs.class ? table.attribs.class.trim() : ''
     const $$ = cheerio.load(table)
-    if (cs === 'el-heading') {
-      category += 1
-      Posts.push({
-        page: String(theNext),
-        date,
-        title: $$('p').text()
-      })
-    }
+    if (cs === 'el-heading') category += 1
     if (cs === 'el-fullwidthimage') {
       // 封面图
       const link = $$('a').attr('href')
       const img = $$('img').attr('src')
       console.log(link, img)
-      Posts.push({
-        pid: link.replace(/[^0-9]/ig, ''),
-        page: String(theNext),
-        date,
-        title: '',
-        img
-      })
+      bigImg = $$('img').attr('src')
     }
     if (cs === 'el-subtable') {
       // Quick bytes OR Quick Releases
@@ -142,7 +131,7 @@ const crawJob = async function () {
             page: String(theNext),
             date,
             title,
-            category: 12,
+            category: 6,
             title_cn: title_cn.result.toString()
           }
           Posts.push(post)
@@ -157,7 +146,7 @@ const crawJob = async function () {
             page: String(theNext),
             date,
             title,
-            category: 11,
+            category: 7,
             summary,
             summary_cn: summary_cn.result.toString()
           }
@@ -170,6 +159,7 @@ const crawJob = async function () {
       const link = $$('.mainlink a').attr('href')
       const summary = $$('.desc').text()
       const pic = $$('.som').attr('src') || ''
+      const img = bigImg
       if (title && link && summary) {
         const title_cn = await google.translate(title)
         const summary_cn = await google.translate(summary)
@@ -180,16 +170,17 @@ const crawJob = async function () {
           title,
           title_cn:　title_cn.result.toString(),
           category,
+          img,
           pic,
           summary,
           summary_cn: summary_cn.result.toString()
         }
         Posts.push(post)
+        bigImg = ''
       }
     }
   }
-  await saveData()
-  // console.log(Posts)
+  // await saveData()
   await browser.close()
 }
 
