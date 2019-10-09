@@ -8,7 +8,7 @@ import { JavaScriptWeekly } from './src/entity/JavaScriptWeekly'
 import * as fs from 'fs'
 import * as request from 'request'
 
-const myConnection = createConnection()
+// const myConnection = createConnection()
 
 tinify.key = 'dFNyGR77vsxskHxqgLhY0R6Zyx5Jspfs/6Hd_ugwx8'
 
@@ -52,21 +52,23 @@ function translateAll () {
 
 // 保存数据到 sqlit3
 async function saveData () {
-  const ArticleRepository = getManager().getRepository(JavaScriptWeekly)
-  Posts.forEach(v => {
-    const article = new JavaScriptWeekly()
-    article.pid = v.pid || ''
-    article.page = v.page
-    article.date = v.date
-    article.category = v.category || 0
-    article.title = v.title || ''
-    article.title_cn = v.title_cn || ''
-    article.link = v.link || ''
-    article.img = v.img || ''
-    article.pic = v.pic || ''
-    article.summary = v.summary || ''
-    article.summary_cn = v.summary_cn || ''
-    ArticleRepository.save(article)
+  createConnection().then(async connection => {
+    const ArticleRepository = connection.getRepository(JavaScriptWeekly)
+    Posts.forEach(async v => {
+      const article = new JavaScriptWeekly()
+      article.pid = v.pid || ''
+      article.page = v.page
+      article.date = v.date
+      article.category = v.category || 0
+      article.title = v.title || ''
+      article.title_cn = v.title_cn || ''
+      article.link = v.link || ''
+      article.img = v.img || ''
+      article.pic = v.pic || ''
+      article.summary = v.summary || ''
+      article.summary_cn = v.summary_cn || ''
+      await ArticleRepository.save(article)
+    })
   })
   // setTimeout(() => {
   //   console.log(theNext, 'done')
@@ -105,6 +107,7 @@ const crawJob = async function () {
     console.log('压缩成功')
   }
   const crawShotPage = async (id: string) => {
+    console.log(id)
     try {
       await shotPage.goto(`https://javascriptweekly.com/link/${id}/web`, {
         waitUntil: 'networkidle2',
