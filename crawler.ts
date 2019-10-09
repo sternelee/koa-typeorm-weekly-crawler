@@ -3,9 +3,12 @@ import { createConnection, getManager } from 'typeorm'
 import * as puppeteer from 'puppeteer'
 import * as cheerio from 'cheerio'
 import { google } from 'translation.js'
+import tinify from 'tinify'
 import { JavaScriptWeekly } from './src/entity/JavaScriptWeekly'
 
 const myConnection = createConnection()
+
+tinify.key = 'dFNyGR77vsxskHxqgLhY0R6Zyx5Jspfs/6Hd_ugwx8'
 
 interface IPost {
   pid?: string //内容ID
@@ -24,6 +27,8 @@ interface IPost {
 let category = 0 // 类型id
 let theNext = 457
 let Posts: IPost[] = []
+
+const shotDir = 'static/javascript/'
 
 // const URI = 'https://javascriptweekly.com/issues/latest';
 const URI = 'https://javascriptweekly.com/issues/'
@@ -76,15 +81,37 @@ const crawJob = async function () {
   })
   // Reader Mode triggering 显示简化版视图
   const page = await browser.newPage()
+  await page.emulate(puppeteer.devices['Pixel 2 XL'])
   // 模拟iphone X设备
-  await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1')
-  await page.setViewport({
-    width: 375,
-    height: 812,
-    deviceScaleFactor: 3,
-    isMobile: true,
-    hasTouch: true
-  })
+  // await page.setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1')
+  // await page.setViewport({
+  //   width: 375,
+  //   height: 812,
+  //   deviceScaleFactor: 3,
+  //   isMobile: true,
+  //   hasTouch: true
+  // })
+  const shotPage = await browser.newPage()
+  await shotPage.emulate(puppeteer.devices['Pixel 2 XL'])
+  const tinifyShot = async (id: string) => {
+    const source = tinify.fromFile(`${shotDir}${id}.png`)
+    source.toFile(`${shotDir}${id}.png`)
+    console.log('压缩成功')
+  }
+  const crawShotPage = async (id: string) => {
+    try {
+      await shotPage.goto(`https://javascriptweekly.com/link/${id}/web`, {
+        waitUntil: 'networkidle2',
+        timeout: 30000
+      })
+      // await shotPage.screenshot({path: `${shotDir}${id}.jpeg`, fullPage: true, type: 'jpeg', quality: 60})
+      await shotPage.screenshot({path: `${shotDir}${id}.png`, fullPage: true})
+      console.log('保存shotpage成功')
+      // tinifyShot(id)
+    } catch(e) {
+      console.log('无法请求页面')
+    }
+  }
   await page.goto(URI + theNext, {
     waitUntil: 'networkidle2',
     timeout: 30000
@@ -131,14 +158,15 @@ const crawJob = async function () {
       const subUl = $$('.nogap li')
       for (const li of Array.from(subUl)) {
         const $$$ = cheerio.load(li)
-        const title = $$$('')
         if (subTable.attr('class') === 'content el-content briefs') {
           // Quick bytes
           const title = $$$('li').text()
           const link = $$$('a').attr('href')
           const title_cn = await google.translate(title)
+          const pid = link.replace(/[^0-9]/ig, '')
+          await crawShotPage(pid)
           const post = {
-            pid: link.replace(/[^0-9]/ig, ''),
+            pid,
             page: String(theNext),
             date,
             title,
@@ -152,8 +180,10 @@ const crawJob = async function () {
           const summary = $$$('li').text()
           const link = $$$('a').attr('href')
           const summary_cn = await google.translate(summary)
+          const pid = link.replace(/[^0-9]/ig, '')
+          await crawShotPage(pid)
           const post = {
-            pid: link.replace(/[^0-9]/ig, ''),
+            pid,
             page: String(theNext),
             date,
             title,
@@ -173,8 +203,10 @@ const crawJob = async function () {
       if (title && link && summary) {
         const title_cn = await google.translate(title)
         const summary_cn = await google.translate(summary)
+        const pid = link.replace(/[^0-9]/ig, '')
+        await crawShotPage(pid)
         const post = {
-          pid: link.replace(/[^0-9]/ig, ''),
+          pid,
           page: String(theNext),
           date,
           title,
@@ -193,4 +225,21 @@ const crawJob = async function () {
   await browser.close()
 }
 
+async function crawPage (id: number) {
+  const browser = await puppeteer.launch({
+    args: ['--no-sandbox', '--enable-reader-mode=true'],
+    dumpio: false
+  })
+  // Reader Mode triggering 显示简化版视图
+  const page = await browser.newPage()
+  await page.emulate(puppeteer.devices['Pixel 2 XL'])
+  await page.goto(`https://javascriptweekly.com/link/${id}/web`, {
+    waitUntil: 'networkidle2',
+    timeout: 30000
+  })
+  await page.screenshot({path: `imgs/${id}.png`, fullPage: true})
+  await browser.close()
+}
+
+// crawPage(0)
 crawJob()

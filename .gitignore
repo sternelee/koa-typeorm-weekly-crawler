@@ -2,3 +2,5 @@ node_modules
 dist
 php
 yarn.lock
+static/**/*.png
+static/**/*.jpeg
