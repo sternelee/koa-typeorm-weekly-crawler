@@ -251,6 +251,6 @@ async function crawPage (id: number) {
 }
 
 // crawPage(0)
-// crawJob()
+crawJob()
 
-downloadImg()
+// downloadImg()
