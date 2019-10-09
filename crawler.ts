@@ -5,6 +5,8 @@ import * as cheerio from 'cheerio'
 import { google } from 'translation.js'
 import tinify from 'tinify'
 import { JavaScriptWeekly } from './src/entity/JavaScriptWeekly'
+import * as fs from 'fs'
+import * as request from 'request'
 
 const myConnection = createConnection()
 
@@ -71,6 +73,10 @@ async function saveData () {
   //   theNext += 1
   //   // crawJob()
   // }, 2000)
+}
+
+async function downloadImg () {
+  request('https://res.cloudinary.com/cpress/image/upload/w_1280,e_sharpen:60/v1570202912/ovhkzqclpz5rp5wjyjfk.jpg').pipe(fs.createWriteStream('1.png'))
 }
 
 // 使用 puppeteer
@@ -143,9 +149,11 @@ const crawJob = async function () {
       // 封面图
       const link = $$('a').attr('href')
       const img = $$('img').attr('src')
+      const pid = link.replace(/[^0-9]/ig, '')
       console.log(link, img)
+      request(img).pipe(fs.createWriteStream(`${shotDir}/pic/${pid}.png`))
       Posts.push({
-        pid: link.replace(/[^0-9]/ig, ''),
+        pid,
         page: String(theNext),
         date,
         title: '',
@@ -204,6 +212,7 @@ const crawJob = async function () {
         const title_cn = await google.translate(title)
         const summary_cn = await google.translate(summary)
         const pid = link.replace(/[^0-9]/ig, '')
+        if (pic) request(pic).pipe(fs.createWriteStream(`${shotDir}/pic/${pid}.png`))
         await crawShotPage(pid)
         const post = {
           pid,
@@ -242,4 +251,6 @@ async function crawPage (id: number) {
 }
 
 // crawPage(0)
-crawJob()
+// crawJob()
+
+downloadImg()
