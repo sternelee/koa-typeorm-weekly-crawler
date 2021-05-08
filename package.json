@@ -44,7 +44,7 @@
     "sqlite3": "^4.1.0",
     "tinify": "^1.6.0-beta.2",
     "translation.js": "^0.7.9",
-    "typeorm": "^0.2.18",
+    "typeorm": "^0.2.25",
     "typescript": "^3.5.3"
   },
   "devDependencies": {
